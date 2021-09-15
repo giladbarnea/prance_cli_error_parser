@@ -94,8 +94,7 @@ def main():
                 backend=backend
                 )
     except Exception as e:
-        raise
-        # print_error_args(e.args, width=width, rows=rows)
+        print_error_args(e.args, width=width, rows=rows)
     else:
         print(f'Valid (no errors): {target}')
 
