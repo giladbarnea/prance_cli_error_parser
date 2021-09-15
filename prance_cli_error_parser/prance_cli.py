@@ -5,7 +5,6 @@ from collections.abc import Iterable, Mapping
 
 from jsonschema._utils import Unset
 from prance import ResolvingParser
-
 from prance_cli_error_parser.util import pretty_type, shorten
 
 argparser = ArgumentParser()
@@ -13,6 +12,10 @@ argparser.add_argument(
         "target",
         type=str,
         help='openapi.yaml file path',
+        )
+argparser.add_argument(
+        "--raw",
+        action='store_true',
         )
 argparser.add_argument(
         "--rows",
@@ -51,6 +54,7 @@ backend = parsed_args.backend
 working_dir = parsed_args.working_dir
 width = parsed_args.width
 max_depth = parsed_args.max_depth
+raw = parsed_args.raw
 
 os.chdir(working_dir)
 
@@ -59,7 +63,15 @@ if not width:
 
 if not max_depth:
     from math import inf
+    
     max_depth = inf
+
+try:
+    from rich.traceback import install
+    
+    install(show_locals=True, width=width, word_wrap=True)
+except ModuleNotFoundError:
+    pass
 indent = -1
 
 
@@ -84,10 +96,7 @@ def print_error_args(args: Iterable):
         indent_size = 2 * indent + prefix  # including space
         idx = f'{tabs}\x1b[90m[{i}]\x1b[0m'
         typ = f'\x1b[90m{pretty_type(type(arg))}\x1b[0m'
-        if isinstance(arg, Mapping):
-            formatted = format_primitive(arg, idx=idx, indent_size=indent_size, prefix=prefix, tabs=tabs)
-            print(formatted)
-        elif isinstance(arg, Iterable) and not isinstance(arg, str):
+        if isinstance(arg, Iterable) and not isinstance(arg, str) and not isinstance(arg, Mapping):
             print(idx, typ)
             print_error_args(arg)
         elif isinstance(arg, BaseException):
@@ -99,6 +108,7 @@ def print_error_args(args: Iterable):
     else:
         indent -= 1
 
+
 def main():
     try:
         parser = ResolvingParser(
@@ -107,6 +117,8 @@ def main():
                 backend=backend
                 )
     except Exception as e:
+        if raw:
+            raise
         print_error_args(e.args)
     else:
         print(f'Valid (no errors): {target}')
