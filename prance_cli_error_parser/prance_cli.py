@@ -11,7 +11,7 @@ from prance_cli_error_parser.util import pretty_type, shorten
 indent = -1
 
 
-def print_error_args(args: Iterable, *, limit, rows):
+def print_error_args(args: Iterable, *, width, rows):
     global indent
     indent += 1
     tabs = '\033[38;2;40;40;40m' + '· ' * indent + '\033[0m'
@@ -28,14 +28,14 @@ def print_error_args(args: Iterable, *, limit, rows):
             print(arg)
         elif isinstance(arg, Iterable) and not isinstance(arg, str):
             print(idx, typ)
-            print_error_args(arg, limit=limit, rows=rows)
+            print_error_args(arg, width=width, rows=rows)
         elif isinstance(arg, BaseException):
             print(idx, typ)
-            print_error_args(arg.args, limit=limit, rows=rows)
+            print_error_args(arg.args, width=width, rows=rows)
         else:
-            width = limit - indent_size
-            short = shorten(str(arg), limit=width * rows)
-            wrapped = textwrap.fill(short, width=width + prefix)
+            actual_width = width - indent_size
+            short = shorten(str(arg), limit=actual_width * rows)
+            wrapped = textwrap.fill(short, width=actual_width + prefix)
             joiner = f'\n{tabs}' + ' ' * prefix
             print(f'{idx} ' + joiner.join(wrapped.splitlines()))
     else:
@@ -57,6 +57,12 @@ def main():
             help='Maximum rows per exception argument (a shortened string is displayed). Default 1'
             )
     argparser.add_argument(
+                "--width",
+                dest="width",
+                type=int,
+                help="Defaults to active terminal's width (run 'echo $COLUMNS' to view)"
+                )
+    argparser.add_argument(
             "--backend",
             type=str,
             choices=['openapi-spec-validator', ],
@@ -75,9 +81,11 @@ def main():
     rows = parsed_args.rows
     backend = parsed_args.backend
     working_dir = parsed_args.working_dir
+    width = parsed_args.width
     os.chdir(working_dir)
-    
-    limit = 10 * (int(os.get_terminal_size()[0]) // 10)  # round down
+
+    if not width:
+        width = 10 * (int(os.get_terminal_size()[0]) // 10) - 5  # round down
     
     try:
         parser = ResolvingParser(
@@ -86,7 +94,8 @@ def main():
                 backend=backend
                 )
     except Exception as e:
-        print_error_args(e.args, limit=limit, rows=rows)
+        raise
+        # print_error_args(e.args, width=width, rows=rows)
     else:
         print(f'Valid (no errors): {target}')
 
