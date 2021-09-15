@@ -8,6 +8,7 @@ authors = ["'Gilad Barnea' <cr-gbarn-herolo@allot.com>"]
 python = "^3.8"
 prance = "^0.21.8"
 jsonschema = "^3.2.0"
+openapi-spec-validator = "^0.3.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
