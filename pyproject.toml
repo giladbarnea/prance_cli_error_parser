@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "prance_cli_error_parser"
+version = "0.1.0"
+description = "A command-line tool that parses and prints beautiful prance validation errors"
+authors = ["'Gilad Barnea' <cr-gbarn-herolo@allot.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+prance = "^0.21.8"
+jsonschema = "^3.2.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
